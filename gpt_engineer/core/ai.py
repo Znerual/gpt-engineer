@@ -20,6 +20,7 @@ from langchain.schema import (
     messages_to_dict,
 )
 
+from gpt_engineer.core.custom_chat_model import CustomNonChatModel
 from gpt_engineer.core.token_usage import TokenUsageLog
 
 # Type hint for a chat message
@@ -35,6 +36,7 @@ class AI:
         model_name="gpt-4-1106-preview",
         temperature=0.1,
         azure_endpoint="",
+        custom_model=True,
         streaming=True,
     ):
         """
@@ -49,6 +51,7 @@ class AI:
         """
         self.temperature = temperature
         self.azure_endpoint = azure_endpoint
+        self.custom_model = custom_model
         self.model_name = model_name
         self.streaming = streaming
         self.llm = self._create_chat_model()
@@ -222,7 +225,9 @@ class AI:
         BaseChatModel
             The created chat model.
         """
+
         if self.azure_endpoint:
+            print("Using Azure model")
             return AzureChatOpenAI(
                 openai_api_base=self.azure_endpoint,
                 openai_api_version=os.getenv("OPENAI_API_VERSION", "2023-05-15"),
@@ -231,12 +236,20 @@ class AI:
                 streaming=self.streaming,
             )
 
-        return ChatOpenAI(
-            model=self.model_name,
-            temperature=self.temperature,
-            streaming=self.streaming,
-            client=openai.ChatCompletion,
-        )
+        if self.custom_model:
+            print("Using custom model")
+            return CustomNonChatModel(
+                model_url="http://localhost:5000/v1/completions",
+                streaming=self.streaming,
+            )
+        else:
+            print("Using OpenAI model")
+            return ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature,
+                streaming=self.streaming,
+                client=openai.ChatCompletion,
+            )
 
 
 def serialize_messages(messages: List[Message]) -> str:
