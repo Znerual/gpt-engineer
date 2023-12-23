@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Union
 
 from gpt_engineer.core.base_memory import BaseMemory
+from gpt_engineer.tools.experimental.pdf_parser import pdf_extract_text
 from gpt_engineer.tools.experimental.supported_languages import SUPPORTED_LANGUAGES
 
 
@@ -137,6 +138,10 @@ class DiskMemory(BaseMemory):
 
         if not full_path.is_file():
             raise KeyError(f"File '{key}' could not be found in '{self.path}'")
+
+        if full_path.suffix == ".pdf":
+            return pdf_extract_text(full_path)
+
         with full_path.open("r", encoding="utf-8") as f:
             return f.read()
 
