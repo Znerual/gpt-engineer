@@ -15,6 +15,7 @@ Message = Union[AIMessage, HumanMessage, SystemMessage]
 
 class CachingAI(AI):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.temperature = 0.1
         self.azure_endpoint = ""
         self.streaming = False
