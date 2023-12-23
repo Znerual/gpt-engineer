@@ -26,6 +26,27 @@ class CodeVectorRepository:
             file_metadata=name_metadata_storer,
         ).load_data()
 
+    def _load_documents_from_dict(self, file_dict: Dict[str, str]) -> List[Document]:
+        documents = []
+        for file, content in file_dict.items():
+            doc = Document(text=content, metadata={"filename": file})
+            documents.append(doc)
+
+        return documents
+
+    def load_from_dict(self, file_dict: Dict[str, str]):
+        documents = self._load_documents_from_dict(file_dict)
+
+        chunked_langchain_documents = DocumentChunker.chunk_documents(
+            [doc.to_langchain_format() for doc in documents]
+        )
+
+        chunked_documents = [
+            Document.from_langchain_format(doc) for doc in chunked_langchain_documents
+        ]
+
+        self._index = VectorStoreIndex.from_documents(chunked_documents)
+
     def load_from_directory(self, directory_path: str):
         documents = self._load_documents_from_directory(directory_path)
 
